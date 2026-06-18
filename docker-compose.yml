@@ -1,0 +1,58 @@
+services:
+  db:
+    image: postgres:17.4-alpine
+    container_name: postgres-shortlink
+    env_file:
+      - .env
+    ports:
+      - "${POSTGRES_PORT}:5432"
+    volumes:
+      - postgres_shortlink:/var/lib/postgresql/data
+    restart: always
+    networks:
+      - server
+  redis:
+    image: redis:8.4-alpine
+    container_name: redis-shortlink
+    ports:
+      - "${REDIS_PORT}:6379"
+    volumes:
+      - redis_shortlink:/data
+      - ./redis.conf:/usr/local/etc/redis/redis.conf
+    command: redis-server /usr/local/etc/redis/redis.conf 
+    networks:
+      - server
+    restart: always
+  migrate:
+    image: migrate/migrate:v4.19.1
+    env_file:
+      - .env
+    networks:
+      - server
+    depends_on:
+      - db
+    restart: "no"
+    volumes:
+      - ./db/migrations:/migrations:ro
+    entrypoint: ["sh"]
+    command: ["-c", 'sleep 5 && migrate -database "$$DATABASE_URL" -path /migrations up']
+  seed:
+    image: postgres:18.3-alpine
+    env_file:
+      - .env
+    networks:
+      - server
+    depends_on:
+      - db
+    restart: "no"
+    volumes:
+      - ./db/seeds:/seeds:ro
+    tmpfs:
+      - /var/lib/postgresql 
+    entrypoint: ["sh"]
+    command: ["-c", 'sleep 7 && echo "Start seeding..."; for f in /seeds/*.sql; do echo "Applying seeder: $$f"; psql "$$DATABASE_URL" -f "$$f"; done; echo "Seeding completed."']
+volumes:
+  postgres_shortlink:
+  redis_shortlink:
+networks:
+  server:
