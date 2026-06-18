@@ -267,23 +267,6 @@ Saat user logout, JWT akan disimpan ke Redis hingga masa berlaku token berakhir.
 
 Link tidak langsung dihapus permanen sehingga histori data tetap dapat dipertahankan.
 
----
-
-## 🧪 Running Tests
-
-Menjalankan seluruh unit test:
-
-```bash
-go test ./...
-```
-
-Coverage:
-
-```bash
-go test ./... -cover
-```
-
----
 
 ## 👨‍💻 Author
 
